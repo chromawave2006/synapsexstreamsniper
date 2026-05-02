@@ -9,6 +9,7 @@ local webhookURL = "https://discord.com/api/webhooks/1500212577391874189/TmdztJK
 
 local lastValue = usd.Value
 
+
 local function sendWebhook(title, description, color)
     local req = (syn and syn.request) or (http and http.request) or http_request or request
     if req then
@@ -21,42 +22,50 @@ local function sendWebhook(title, description, color)
                     ["title"] = title,
                     ["description"] = description,
                     ["color"] = color or 16776960,
-                    ["footer"] = {["text"] = "60-Second Interval Update"}
+                    ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
                 }}
             })
         })
     end
 end
 
-print("Money monitor started. Checking every 60 seconds...")
+-- 1. DETECTION: LEAVING THE GAME
+game.OnClose = function()
+    sendWebhook(
+        "❌ Player Left / Game Closed", 
+        "User **" .. player.Name .. "** has disconnected or the game closed.\nFinal Balance: **$" .. tostring(usd.Value) .. "**", 
+        16711680 -- Red
+    )
+    task.wait(2) -- Give the webhook a moment to send before the process kills
+end
 
--- The main loop
+print("Monitor active. Reporting every 60s. Leave detection armed.")
+
+
 while true do
-    task.wait(60) -- Wait exactly one minute
+    task.wait(60)
     
     local currentValue = usd.Value
     
     if currentValue == lastValue then
-        -- Money hasn't moved in a minute
+    
         sendWebhook(
             "⚠️ GLITCH STUCK", 
-            "Balance has been stuck at **$" .. tostring(currentValue) .. "** for 1 minute. Restart the glitch!", 
-            16711680 -- Red
+            "Balance is frozen at **$" .. tostring(currentValue) .. "**. Restart the money glitch!", 
+            16744192 -- Orange
         )
     else
-        -- Money has increased/decreased
+       
         local gain = currentValue - lastValue
         sendWebhook(
             "💰 Minute Update", 
-            "Current Balance: **$" .. tostring(currentValue) .. "**\nChange in last minute: **+$" .. tostring(gain) .. "**", 
+            "Current Balance: **$" .. tostring(currentValue) .. "**\nEarned in last minute: **+$" .. tostring(gain) .. "**", 
             65280 -- Green
         )
     end
     
-    -- Update lastValue for the next minute's comparison
     lastValue = currentValue
 end
-
 --[[
 batus made this i just forked
 ]]
