@@ -5,77 +5,69 @@ local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 
 local player = Players.LocalPlayer
-local usd = player:WaitForChild("leaderstats"):WaitForChild("USD")
-
 local webhookURL = "https://discord.com/api/webhooks/1500212577391874189/TmdztJK1hWZEpwJh3XxvZwc9BrrYEkQ26755NLvoKfxBNxPjalT8fFQ3rk2Csw4o2e7M"
+
+-- 1. SAFER PATH FINDING
+-- Some games take a second to load leaderstats. This waits up to 15 seconds.
+local leaderstats = player:WaitForChild("leaderstats", 15)
+local usd = leaderstats and leaderstats:WaitForChild("USD", 15)
+
+if not usd then
+    print("❌ ERROR: Could not find 'USD' in leaderstats. Check the name in the leaderboard!")
+    return
+end
+
+-- 2. UNIVERSAL REQUEST FUNCTION
+-- Detects almost every executor's specific HTTP function
+local function request(data)
+    local fn = (syn and syn.request) or (http and http.request) or http_request or request or (Fluxus and Fluxus.request)
+    if fn then
+        return fn(data)
+    else
+        warn("❌ Executor does not support HTTP requests.")
+    end
+end
+
+local function send(title, description, color)
+    pcall(function()
+        request({
+            Url = webhookURL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = HttpService:JSONEncode({
+                ["embeds"] = {{
+                    ["title"] = title,
+                    ["description"] = description,
+                    ["color"] = color or 16776960,
+                    ["footer"] = {["text"] = "Status: Monitoring Active"}
+                }}
+            })
+        })
+    end)
+end
+
+-- 3. STARTUP
+print("✅ Script Loaded. Checking balance every 60s...")
+send("🚀 Monitor Started", "Currently watching: **" .. player.Name .. "**\nStarting Balance: **$" .. tostring(usd.Value) .. "**", 3447003)
 
 local lastValue = usd.Value
 
--- Reusable Webhook Function
-local function sendWebhook(title, description, color)
-    local req = (syn and syn.request) or (http and http.request) or http_request or request
-    if req then
-        local success, err = pcall(function()
-            req({
-                Url = webhookURL,
-                Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
-                Body = HttpService:JSONEncode({
-                    ["embeds"] = {{
-                        ["title"] = title,
-                        ["description"] = description,
-                        ["color"] = color or 16776960,
-                        ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ"),
-                        ["footer"] = {["text"] = "User: " .. player.Name}
-                    }}
-                })
-            })
-        end)
-        if not success then warn("Webhook failed to send: " .. tostring(err)) end
-    end
-end
-
--- 1. STARTUP NOTIFICATION
-sendWebhook(
-    "🚀 Script Started", 
-    "The money monitor is now **ACTIVE**.\nInitial Balance: **$" .. tostring(lastValue) .. "**\nInterval: **60 Seconds**", 
-    3447003 -- Blue
-)
-
--- 2. LEAVE DETECTION
+-- 4. LEAVE DETECTION
 game.OnClose = function()
-    sendWebhook(
-        "❌ Player Left / Game Closed", 
-        "User **" .. player.Name .. "** disconnected.\nFinal Balance: **$" .. tostring(usd.Value) .. "**", 
-        16711680 -- Red
-    )
-    task.wait(2)
+    send("❌ Player Left", player.Name .. " closed the game.", 16711680)
 end
 
-print("Monitor initialized successfully.")
-
--- 3. MINUTE LOOP
+-- 5. THE LOOP
 while true do
-    task.wait(60) -- Wait exactly 1 minute
-    
+    task.wait(60)
     local currentValue = usd.Value
-    
+    print("Checking balance... Current: " .. currentValue .. " | Previous: " .. lastValue)
+
     if currentValue == lastValue then
-        -- No money change
-        sendWebhook(
-            "⚠️ GLITCH STUCK", 
-            "Balance hasn't moved from **$" .. tostring(currentValue) .. "** in the last minute. You might need to restart the glitch!", 
-            16744192 -- Orange
-        )
+        send("⚠️ GLITCH STUCK", "Money hasn't moved from **$" .. currentValue .. "** in 60 seconds!", 16744192)
     else
-        -- Progress update
         local gain = currentValue - lastValue
-        sendWebhook(
-            "💰 Minute Update", 
-            "Current Balance: **$" .. tostring(currentValue) .. "**\nProfit this minute: **+$" .. tostring(gain) .. "**", 
-            65280 -- Green
-        )
+        send("💰 Minute Update", "Current: **$" .. currentValue .. "**\nGain: **+$" .. gain .. "**", 65280)
     end
-    
     lastValue = currentValue
 end
