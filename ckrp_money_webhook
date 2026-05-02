@@ -7,16 +7,13 @@ local usd = player:WaitForChild("leaderstats"):WaitForChild("USD")
 
 local webhookURL = "https://discord.com/api/webhooks/1500212577391874189/TmdztJK1hWZEpwJh3XxvZwc9BrrYEkQ26755NLvoKfxBNxPjalT8fFQ3rk2Csw4o2e7M"
 
-local lastSent = 0
-local cooldown = 15 -- Seconds to wait between messages (to avoid Discord bans)
+local lastValue = usd.Value
+local lastChangeTime = tick()
+local idleThreshold = 60 -- Seconds to wait before alerting
+local alerted = false
 
-local function sendWebhook(val)
-    local now = tick()
-    if (now - lastSent) < cooldown then return end -- Skip if sending too fast
-    lastSent = now
-
+local function sendWebhook(title, message, color)
     local req = (syn and syn.request) or (http and http.request) or http_request or request
-    
     if req then
         req({
             Url = webhookURL,
@@ -24,22 +21,47 @@ local function sendWebhook(val)
             Headers = {["Content-Type"] = "application/json"},
             Body = HttpService:JSONEncode({
                 ["embeds"] = {{
-                    ["title"] = "💰 Money Update",
-                    ["description"] = "**" .. player.Name .. "** now has: **$" .. string.format("%.2f", val) .. "**",
-                    ["color"] = 16776960,
-                    ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                    ["title"] = title,
+                    ["description"] = message,
+                    ["color"] = color or 16711680, -- Default Red
+                    ["footer"] = {["text"] = "Status Monitor"}
                 }}
             })
         })
     end
 end
 
-
+-- Monitor value changes
 usd.Changed:Connect(function(newVal)
-    sendWebhook(newVal)
+    if newVal ~= lastValue then
+        lastValue = newVal
+        lastChangeTime = tick()
+        
+        -- If we were previously alerted as idle, notify that it started moving again
+        if alerted then
+            alerted = false
+            sendWebhook("✅ Back in Action", player.Name .. " is earning money again. Current: **$" .. tostring(newVal) .. "**", 65280)
+        end
+    end
 end)
 
-print("Real-time monitoring active for USD.")
+-- Background loop to check for inactivity
+task.spawn(function()
+    while task.wait(5) do -- Checks every 5 seconds to save performance
+        local timeSinceChange = tick() - lastChangeTime
+        
+        if timeSinceChange >= idleThreshold and not alerted then
+            alerted = true
+            sendWebhook(
+                "⚠️ INACTIVITY ALERT", 
+                "Money hasn't changed for 60 seconds! \n**Action Required:** Restart the money glitch.", 
+                16711680 -- Red
+            )
+        end
+    end
+end)
+
+print("Idle monitor started: Alerting after " .. idleThreshold .. "s of no income.")
 
 --[[
 batus made this i just forked
