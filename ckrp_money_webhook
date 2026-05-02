@@ -31,7 +31,7 @@ local function sendWebhook(title, description, color)
     end
 end
 
--- 1. DETECTION: LEAVING THE GAME
+
 game.OnClose = function()
     sendWebhook(
         "❌ Player Left / Game Closed", 
@@ -41,7 +41,11 @@ game.OnClose = function()
     task.wait(2) -- Give the webhook a moment to send before the process kills
 end
 
-print("Monitor active. Reporting every 60s. Leave detection armed.")
+sendWebhook(
+    "🚀 Script Started", 
+    "The money monitor is now **ACTIVE**.\nInitial Balance: **$" .. tostring(lastValue) .. "**\nInterval: **60 Seconds**", 
+    3447003 -- Blue
+)
 
 
 while true do
