@@ -69,7 +69,7 @@ local function createGui()
     sg.ResetOnSpawn = false
 
     local frame = Instance.new("Frame", sg)
-    frame.Size = UDim2.new(0, 250, 0, 70)
+    frame.Size = UDim2.new(0, 300, 0, 70)
     frame.Position = UDim2.new(0.5, 0, 0.5, 0)
     frame.AnchorPoint = Vector2.new(0.5, 0.5)
     frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -88,7 +88,7 @@ local function createGui()
     text.Size = UDim2.new(1, 0, 1, 0)
     text.BackgroundTransparency = 1
     text.Text = "Verified: " .. player.Name
-    text.TextColor3 = Color3.new(1, 1, 1)
+    text.TextColor3 = Color3.new(58, 146, 255)
     text.TextSize = 22
     text.Font = Enum.Font.GothamBold
     text.TextTransparency = 1
