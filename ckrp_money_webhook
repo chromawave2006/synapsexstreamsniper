@@ -3,71 +3,131 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/evxncodes/mainroblox/
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
-
 local player = Players.LocalPlayer
+
+local currencyName = "USD" 
 local webhookURL = "https://discord.com/api/webhooks/1500212577391874189/TmdztJK1hWZEpwJh3XxvZwc9BrrYEkQ26755NLvoKfxBNxPjalT8fFQ3rk2Csw4o2e7M"
 
--- 1. SAFER PATH FINDING
--- Some games take a second to load leaderstats. This waits up to 15 seconds.
-local leaderstats = player:WaitForChild("leaderstats", 15)
-local usd = leaderstats and leaderstats:WaitForChild("USD", 15)
+-- 1. CREATE THE CENTERED TEMPORARY GUI
+local function createGui()
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "MonitorGui"
+    sg.ResetOnSpawn = false
+    sg.DisplayOrder = 999
+    sg.Parent = player:WaitForChild("PlayerGui")
 
-if not usd then
-    print("❌ ERROR: Could not find 'USD' in leaderstats. Check the name in the leaderboard!")
-    return
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 290, 0, 70)
+    -- Positioned at 0.5 (50%) of the screen with a 0.5 AnchorPoint to keep it centered
+    frame.Position = UDim2.new(0.5, 0, 0.5, 0) 
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    frame.BorderSizePixel = 0
+    frame.BackgroundTransparency = 1
+    frame.Parent = sg
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = frame
+
+    local stroke = Instance.new("UIStroke") -- Added a subtle border for a cleaner look
+    stroke.Color = Color3.fromRGB(255, 255, 255)
+    stroke.Thickness = 1.5
+    stroke.Transparency = 1
+    stroke.Parent = frame
+
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.Text = "Made by SonicstudiosMB"
+    text.TextColor3 = Color3.fromRGB(255, 255, 255)
+    text.TextSize = 24
+    text.Font = Enum.Font.GothamBold
+    text.TextTransparency = 1
+    text.Parent = frame
+
+    -- Animation: Fade In, Wait 5s, Fade Out, Destroy
+    task.spawn(function()
+        -- Fade In
+        for i = 1, 0, -0.1 do
+            frame.BackgroundTransparency = i
+            text.TextTransparency = i
+            stroke.Transparency = i
+            task.wait(0.05)
+        end
+        
+        task.wait(5)
+        
+        -- Fade Out
+        for i = 0, 1, 0.1 do
+            frame.BackgroundTransparency = i
+            text.TextTransparency = i
+            stroke.Transparency = i
+            task.wait(0.05)
+        end
+        
+        sg:Destroy()
+    end)
 end
 
--- 2. UNIVERSAL REQUEST FUNCTION
--- Detects almost every executor's specific HTTP function
-local function request(data)
-    local fn = (syn and syn.request) or (http and http.request) or http_request or request or (Fluxus and Fluxus.request)
-    if fn then
-        return fn(data)
-    else
-        warn("❌ Executor does not support HTTP requests.")
+-- 2. LOCATE THE VALUE
+local function findMoney()
+    local ls = player:FindFirstChild("leaderstats")
+    if ls and ls:FindFirstChild(currencyName) then return ls[currencyName] end
+    for _, v in pairs(player:GetDescendants()) do
+        if v.Name == currencyName and (v:IsA("IntValue") or v:IsA("NumberValue")) then
+            return v
+        end
     end
+    return nil
 end
 
-local function send(title, description, color)
+local moneyValue = findMoney()
+
+-- 3. WEBHOOK FUNCTION
+local function post(title, desc, color)
+    local requestFunc = (syn and syn.request) or (http and http.request) or http_request or request
+    if not requestFunc then return end
     pcall(function()
-        request({
+        requestFunc({
             Url = webhookURL,
             Method = "POST",
             Headers = {["Content-Type"] = "application/json"},
             Body = HttpService:JSONEncode({
-                ["embeds"] = {{
-                    ["title"] = title,
-                    ["description"] = description,
-                    ["color"] = color or 16776960,
-                    ["footer"] = {["text"] = "Status: Monitoring Active"}
+                embeds = {{
+                    title = title,
+                    description = desc,
+                    color = color or 16776960,
+                    footer = {text = "System Online | Monitoring: " .. currencyName}
                 }}
             })
         })
     end)
 end
 
--- 3. STARTUP
-print("✅ Script Loaded. Checking balance every 60s...")
-send("🚀 Monitor Started", "Currently watching: **" .. player.Name .. "**\nStarting Balance: **$" .. tostring(usd.Value) .. "**", 3447003)
+-- 4. RUN MONITOR
+if moneyValue then
+    createGui()
+    post("🚀 Script Online", "Monitoring **" .. currencyName .. "** for " .. player.Name, 3447003)
 
-local lastValue = usd.Value
+    local lastBalance = moneyValue.Value
 
--- 4. LEAVE DETECTION
-game.OnClose = function()
-    send("❌ Player Left", player.Name .. " closed the game.", 16711680)
-end
-
--- 5. THE LOOP
-while true do
-    task.wait(60)
-    local currentValue = usd.Value
-    print("Checking balance... Current: " .. currentValue .. " | Previous: " .. lastValue)
-
-    if currentValue == lastValue then
-        send("⚠️ GLITCH STUCK", "Money hasn't moved from **$" .. currentValue .. "** in 60 seconds!", 16744192)
-    else
-        local gain = currentValue - lastValue
-        send("💰 Minute Update", "Current: **$" .. currentValue .. "**\nGain: **+$" .. gain .. "**", 65280)
+    game.OnClose = function()
+        post("❌ Player Left", player.Name .. " has left the game.", 16711680)
     end
-    lastValue = currentValue
+
+    while true do
+        task.wait(60)
+        local currentBalance = moneyValue.Value
+        
+        if currentBalance == lastBalance then
+            post("⚠️ GLITCH STUCK", "Money is stuck at **$" .. currentBalance .. "**. Restart the glitch!", 16744192)
+        else
+            local gain = currentBalance - lastBalance
+            post("💰 Minute Update", "Balance: **$" .. currentBalance .. "**\nGain: **+$" .. gain .. "**", 65280)
+        end
+        lastBalance = currentBalance
+    end
+else
+    warn("Could not find USD value.")
 end
