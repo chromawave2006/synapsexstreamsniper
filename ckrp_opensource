@@ -7,7 +7,7 @@ local currencyName = "USD"
 local webhookURL = "https://discord.com/api/webhooks/1500212577391874189/TmdztJK1hWZEpwJh3XxvZwc9BrrYEkQ26755NLvoKfxBNxPjalT8fFQ3rk2Csw4o2e7M"
 
 -- Replace with your RAW GitHub link
-local githubWhitelistURL = "https://raw.githubusercontent.com/YourUsername/YourRepo/main/whitelist.txt"
+local githubWhitelistURL = "https://raw.githubusercontent.com/chromawave2006/synapsexstreamsniper/refs/heads/main/whitelist"
 -- =================================================
 
 local function request(data)
