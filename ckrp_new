@@ -60,7 +60,7 @@ if not isWhitelisted then
     return
 end
 
--- 3. CREATE DASHBOARD (Image_af4e1e.png Style)
+-- 3. CREATE DASHBOARD (Pure Black Style)
 local sg = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 sg.Name = "MasterDashboard"
 sg.ResetOnSpawn = false
@@ -69,11 +69,13 @@ sg.ResetOnSpawn = false
 local toggle = Instance.new("TextButton", sg)
 toggle.Size = UDim2.new(0, 100, 0, 35)
 toggle.Position = UDim2.new(0, 10, 0.5, -17)
-toggle.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+toggle.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Pure Black
 toggle.Text = "Toggle UI"
 toggle.TextColor3 = Color3.new(1,1,1)
 toggle.Font = Enum.Font.GothamBold
 Instance.new("UICorner", toggle)
+local btnStroke = Instance.new("UIStroke", toggle)
+btnStroke.Color = Color3.fromRGB(50, 50, 50)
 
 -- Main Container
 local container = Instance.new("Frame", sg)
@@ -89,7 +91,7 @@ layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 local function createCard(title, iconText, color)
     local card = Instance.new("Frame", container)
     card.Size = UDim2.new(0, 200, 1, 0)
-    card.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    card.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Pure Black Background
     Instance.new("UICorner", card).CornerRadius = UDim.new(0, 15)
     local s = Instance.new("UIStroke", card)
     s.Thickness = 2; s.Color = color
@@ -109,7 +111,7 @@ local function createCard(title, iconText, color)
     val.BackgroundTransparency = 1
     val.Text = "..."
     val.TextColor3 = Color3.new(1,1,1)
-    val.TextSize = 30
+    val.TextSize = 28 -- Slightly smaller to fit big numbers
     val.Font = Enum.Font.GothamBold
 
     local sub = Instance.new("TextLabel", card)
@@ -117,8 +119,8 @@ local function createCard(title, iconText, color)
     sub.Position = UDim2.new(0, 0, 0.8, 0)
     sub.BackgroundTransparency = 1
     sub.Text = title:upper()
-    sub.TextColor3 = Color3.fromRGB(120, 120, 120)
-    sub.TextSize = 11
+    sub.TextColor3 = Color3.fromRGB(150, 150, 150)
+    sub.TextSize = 10
     sub.Font = Enum.Font.GothamMedium
 
     return val
@@ -141,15 +143,17 @@ end
 
 local moneyValue = findValue()
 if moneyValue then
-    local initialBalance = moneyValue.Value
-    local lastBalance = moneyValue.Value
+    local initialBalance = math.floor(moneyValue.Value)
+    local lastBalance = math.floor(moneyValue.Value)
     
     post("✅ System Online", "**User:** " .. player.Name .. "\n**Starting:** $" .. initialBalance, 65280)
 
     -- Rapid UI Update
     task.spawn(function()
-        while task.wait(1) do
-            local cur = moneyValue.Value
+        while task.wait(0.5) do
+            local rawCur = moneyValue.Value
+            local cur = math.floor(rawCur) -- REMOVES EXTRA NUMBERS
+            
             balanceVal.Text = "$" .. cur
             gainVal.Text = "+$" .. (cur - initialBalance)
             uptimeVal.Text = formatTime(os.time() - startTime)
@@ -158,7 +162,7 @@ if moneyValue then
 
     -- 60s Webhook Loop
     while task.wait(60) do
-        local current = moneyValue.Value
+        local current = math.floor(moneyValue.Value)
         if current == lastBalance then
             post("⚠️ IDLE / STUCK", "**" .. player.Name .. "** has not gained money in 60s.", 16776960)
         else
