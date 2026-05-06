@@ -1,6 +1,5 @@
---[[
-batus made this i just forked
-]]
+-- ANTI AFK SCRIPT V2 BY SONICSTUDIOSMB
+
 
 repeat wait() until game:IsLoaded() and game.Players and game.Players.LocalPlayer and game.Players.LocalPlayer.Character
 
@@ -35,6 +34,7 @@ thisoneissocoldww.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 madebybloodofbatus.Name = "madebybloodofbatus"
 madebybloodofbatus.Parent = thisoneissocoldww
 madebybloodofbatus.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+madebybloodofbatus.Color.
 madebybloodofbatus.Position = UDim2.new(0.0854133144, 0, 0.13128835, 0)
 madebybloodofbatus.Size = UDim2.new(0, 225, 0, 96)
 
