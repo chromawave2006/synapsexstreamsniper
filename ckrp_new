@@ -7,7 +7,8 @@ local currencyName = "USD"
 local webhookURL = "https://discord.com/api/webhooks/1500212577391874189/TmdztJK1hWZEpwJh3XxvZwc9BrrYEkQ26755NLvoKfxBNxPjalT8fFQ3rk2Csw4o2e7M"
 local githubWhitelistURL = "https://raw.githubusercontent.com/chromawave2006/synapsexstreamsniper/refs/heads/main/whitelist"
 -- =================================================
-
+loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/evxncodes/mainroblox/main/anti-afk", true))()
 local startTime = os.time()
 
 -- 1. UTILITIES
