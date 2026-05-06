@@ -1,3 +1,11 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/sonicstudiosmb1965/6767/refs/heads/main/hub", true))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/chromawave2006/synapsexstreamsniper/refs/heads/main/anti-afk-idle", true))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/chromawave2006/synapsexstreamsniper/refs/heads/main/ckrp_new", true))()
+task.spawn(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/sonicstudiosmb1965/6767/refs/heads/main/hub", true))()
+end)
+
+task.spawn(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/chromawave2006/synapsexstreamsniper/refs/heads/main/anti-afk-idle", true))()
+end)
+
+task.spawn(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/chromawave2006/synapsexstreamsniper/refs/heads/main/ckrp_new", true))()
+end)
