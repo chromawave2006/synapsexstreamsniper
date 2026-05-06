@@ -8,38 +8,24 @@ local webhookURL = "https://discord.com/api/webhooks/1500212577391874189/TmdztJK
 local githubWhitelistURL = "https://raw.githubusercontent.com/chromawave2006/synapsexstreamsniper/refs/heads/main/whitelist"
 -- =================================================
 
--- Load Additional Scripts
-loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/evxncodes/mainroblox/main/anti-afk", true))()
-
 local startTime = os.time()
 
--- 1. UTILITIES
-local function request(data)
-    local fn = (syn and syn.request) or (http and http.request) or http_request or request
-    if fn then return fn(data) end
-end
-
+-- 1. WEBHOOK UTILITY
 local function post(title, desc, color)
+    local req = (syn and syn.request) or (http and http.request) or http_request or request
+    if not req then return end
     task.spawn(function()
         pcall(function()
-            request({
+            req({
                 Url = webhookURL,
                 Method = "POST",
                 Headers = {["Content-Type"] = "application/json"},
                 Body = HttpService:JSONEncode({
-                    embeds = {{["title"] = title, ["description"] = desc, ["color"] = color or 16776960}}
+                    embeds = {{["title"] = title, ["description"] = desc, ["color"] = color}}
                 })
             })
         end)
     end)
-end
-
-local function formatTime(seconds)
-    local h = math.floor(seconds / 3600)
-    local m = math.floor((seconds % 3600) / 60)
-    local s = seconds % 60
-    return string.format("%02d:%02d:%02d", h, m, s)
 end
 
 -- 2. AUTHENTICATION (GITHUB)
@@ -54,37 +40,33 @@ local function getRemoteWhitelist()
 end
 
 local remoteNames = getRemoteWhitelist()
-local isWhitelisted = false
+local isVerified = false
 for _, name in pairs(remoteNames) do
-    if name == player.Name:lower() then isWhitelisted = true break end
+    if name == player.Name:lower() then isVerified = true break end
 end
 
-if not isWhitelisted then
-    post("🚫 AUTH FAIL", "**" .. player.Name .. "** tried to run the script.", 16711680)
-    return
-end
-
--- 3. CREATE DASHBOARD (Pure Black Style)
+-- 3. UI CONSTRUCTION (FORCED BLACK)
 local sg = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-sg.Name = "MasterDashboard"
+sg.Name = "MasterDashboardV3"
 sg.ResetOnSpawn = false
 
 -- Toggle Button
 local toggle = Instance.new("TextButton", sg)
 toggle.Size = UDim2.new(0, 100, 0, 35)
 toggle.Position = UDim2.new(0, 10, 0.5, -17)
-toggle.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Pure Black
+toggle.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+toggle.BackgroundTransparency = 0 -- Forced Opaque
 toggle.Text = "Toggle UI"
 toggle.TextColor3 = Color3.new(1,1,1)
 toggle.Font = Enum.Font.GothamBold
 Instance.new("UICorner", toggle)
 local btnStroke = Instance.new("UIStroke", toggle)
-btnStroke.Color = Color3.fromRGB(50, 50, 50)
+btnStroke.Color = Color3.fromRGB(80, 80, 80)
 
 -- Main Container
 local container = Instance.new("Frame", sg)
-container.Size = UDim2.new(0, 630, 0, 180)
-container.Position = UDim2.new(0.5, -315, 0.5, -90)
+container.Size = UDim2.new(0, 840, 0, 180)
+container.Position = UDim2.new(0.5, -420, 0.5, -90)
 container.BackgroundTransparency = 1
 
 local layout = Instance.new("UIListLayout", container)
@@ -94,12 +76,14 @@ layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 local function createCard(title, iconText, color)
     local card = Instance.new("Frame", container)
-    card.Size = UDim2.new(0, 200, 1, 0)
-    card.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Pure Black Background
+    card.Size = UDim2.new(0, 190, 1, 0)
+    card.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- FORCED PITCH BLACK
+    card.BackgroundTransparency = 0 -- FORCED OPAQUE
     card.BorderSizePixel = 0
+    
     Instance.new("UICorner", card).CornerRadius = UDim.new(0, 15)
     local s = Instance.new("UIStroke", card)
-    s.Thickness = 2; s.Color = color
+    s.Thickness = 2; s.Color = color; s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
     local icon = Instance.new("TextLabel", card)
     icon.Size = UDim2.new(0, 30, 0, 30)
@@ -116,7 +100,7 @@ local function createCard(title, iconText, color)
     val.BackgroundTransparency = 1
     val.Text = "..."
     val.TextColor3 = Color3.new(1,1,1)
-    val.TextSize = 28 
+    val.TextSize = 24
     val.Font = Enum.Font.GothamBold
 
     local sub = Instance.new("TextLabel", card)
@@ -124,20 +108,31 @@ local function createCard(title, iconText, color)
     sub.Position = UDim2.new(0, 0, 0.8, 0)
     sub.BackgroundTransparency = 1
     sub.Text = title:upper()
-    sub.TextColor3 = Color3.fromRGB(150, 150, 150)
-    sub.TextSize = 10
+    sub.TextColor3 = Color3.fromRGB(160, 160, 160)
+    sub.TextSize = 9
     sub.Font = Enum.Font.GothamMedium
 
     return val
 end
 
+-- Create 4 Specialized Cards
+local authVal = createCard("Security Status", "🛡️", isVerified and Color3.fromRGB(0, 255, 127) or Color3.fromRGB(255, 60, 60))
 local balanceVal = createCard("Current Balance", "$", Color3.fromRGB(255, 215, 0))
 local gainVal = createCard("Earned Session", "↗", Color3.fromRGB(180, 130, 255))
 local uptimeVal = createCard("Session Uptime", "⏱", Color3.fromRGB(255, 140, 60))
 
+-- Set Verification State
+authVal.Text = isVerified and "VERIFIED" or "UNVERIFIED"
+
 toggle.MouseButton1Click:Connect(function() container.Visible = not container.Visible end)
 
--- 4. LOGIC & WEBHOOK LOOP
+-- Kill script logic if not verified
+if not isVerified then
+    post("🚫 AUTH FAIL", "**" .. player.Name .. "** is not whitelisted.", 16711680)
+    return
+end
+
+-- 4. MONITORING ENGINE
 local function findValue()
     local ls = player:FindFirstChild("leaderstats")
     if ls and ls:FindFirstChild(currencyName) then return ls[currencyName] end
@@ -149,30 +144,32 @@ end
 local moneyValue = findValue()
 if moneyValue then
     local initialBalance = math.floor(moneyValue.Value)
-    local lastBalance = math.floor(moneyValue.Value)
+    local lastBalance = initialBalance
     
-    post("✅ System Online", "**User:** " .. player.Name .. "\n**Starting:** $" .. initialBalance, 65280)
+    post("✅ Verified Start", "**User:** " .. player.Name .. "\n**Starting:** $" .. initialBalance, 65280)
 
-    -- Rapid UI Update
+    -- Live UI Loop
     task.spawn(function()
         while task.wait(0.5) do
-            local rawCur = moneyValue.Value
-            local cur = math.floor(rawCur) 
+            local raw = moneyValue.Value
+            local rounded = math.floor(raw)
             
-            balanceVal.Text = "$" .. cur
-            gainVal.Text = "+$" .. (cur - initialBalance)
-            uptimeVal.Text = formatTime(os.time() - startTime)
+            balanceVal.Text = "$" .. rounded
+            gainVal.Text = "+$" .. (rounded - initialBalance)
+            
+            local uptime = os.time() - startTime
+            uptimeVal.Text = string.format("%02d:%02d:%02d", math.floor(uptime/3600), math.floor((uptime%3600)/60), uptime%60)
         end
     end)
 
-    -- 60s Webhook Loop
+    -- Webhook Loop
     while task.wait(60) do
-        local current = math.floor(moneyValue.Value)
-        if current == lastBalance then
-            post("⚠️ IDLE / STUCK", "**" .. player.Name .. "** has not gained money in 60s.", 16776960)
+        local cur = math.floor(moneyValue.Value)
+        if cur == lastBalance then
+            post("⚠️ IDLE", player.Name .. " is stuck at $" .. cur, 16776960)
         else
-            post("💰 Update", "**Balance:** $" .. current .. "\n**Minute Gain:** +$" .. (current - lastBalance), 65280)
+            post("💰 GAIN", player.Name .. " | +$" .. (cur - lastBalance), 65280)
         end
-        lastBalance = current
+        lastBalance = cur
     end
 end
